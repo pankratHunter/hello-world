@@ -1,0 +1,161 @@
+#!/bin/bash
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: node-simple-ts <artifact_name>"
+    exit 1
+fi
+
+artifactId=$1
+artifactPackage=${1//-/_}
+root=$folder/src/main/java
+
+mkdir -p $artifactId/src/components/my-app
+mkdir -p $artifactId/dist/{js,img,css}
+
+cat > $artifactId/README.md << EOM
+EOM
+
+cat > $artifactId/index.html << EOM
+<html>
+  <head>
+    <title>$1</title>
+  </head>
+  <body>
+    <my-app></my-app>
+    <script src="bundle.js"></script>
+  </body>
+</html>
+EOM
+
+cat > $artifactId/package.json << EOM
+{
+  "name": "starter-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "node webpack -p --optimize-minimize",
+    "start": "node webpack.dev.server --mode development --open"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.5.2",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-runtime": "^6.23.0",
+    "css-loader": "^0.28.4",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "node-sass": "^4.5.3",
+    "prettier": "1.19.1",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.18.2",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "dependencies": {
+    "redux": "^4.0.5"
+  }
+}
+EOM
+
+cat > $artifactId/webpack.config.js << EOM
+var path = require('path');
+
+module.exports = {
+  entry: './src/index.js',
+  module: {
+    rules: [
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' },
+      {
+        test: /\.scss$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'sass-loader'
+          }
+        ]
+      }
+    ]
+  },
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, './dist')
+
+  },
+  performance: {
+    hints: false
+  },
+  devServer: {
+    publicPath: path.resolve(__dirname, './dist'),
+    writeToDisk: true
+  }
+};
+EOM
+
+cat > $artifactId/webpack.dev.server.js << EOM
+var webpack = require('webpack');
+var WebpackDevServer = require('webpack-dev-server');
+var config = require('./webpack.config');
+
+new WebpackDevServer(webpack(config), {
+  headers: { 'Access-Control-Allow-Origin': '*' }
+}).listen('8000');
+EOM
+
+cat > $artifactId/src/index.js << EOM
+import './styles.scss';
+
+import MyApp from './components/my-app';
+customElements.define('my-app', MyApp);
+
+console.log("Ready...");
+EOM
+
+cat > $artifactId/src/styles.scss << EOM
+html, body {
+  margin: 0;
+}
+body {
+  background: #f6f6ef;
+}
+EOM
+
+
+cat > $artifactId/src/components/my-app/index.js << EOM
+export default class MyApp extends HTMLElement {
+  constructor() {
+    super();
+    this.shadowObj = this.attachShadow({mode: 'open'});
+    this.render();
+  }
+
+  render() {
+    this.shadowObj.innerHTML = this.getTemplate();
+  }
+
+  getTemplate() {
+  }
+
+  getStyle() {
+  }
+}
+EOM
+
+cd $artifactId
+#npm install
