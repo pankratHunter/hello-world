@@ -1,4 +1,3 @@
 # hello-world
-pierwszy hello-world
 
-i coś jeszcze
+Web Components starter
